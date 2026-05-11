@@ -92,6 +92,12 @@ def testStaticColumnsWithSecondaryIndex(cql, test_keyspace):
         # Reproduces issue #8869:
         assert_rows(execute(cql, table, "SELECT s FROM %s WHERE v = 1"), [42], [42])
 
+        # Cross-partition static column query via secondary index
+        # (covers the gap from dtest cql_static_columns_tests.py)
+        execute(cql, table, "INSERT INTO %s (k, p, s, v) VALUES (1, 0, 99, 1)")
+        assert_rows_ignoring_order(execute(cql, table, "SELECT * FROM %s WHERE v = 1"),
+                     [0, 0, 42, 1], [0, 1, 42, 1], [1, 0, 99, 1])
+
 def checkDistinctRows(rows, sort, *ranges):
     assert len(ranges) % 2 == 0
     numdim = len(ranges) // 2
